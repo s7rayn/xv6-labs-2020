@@ -120,6 +120,42 @@ void testproc() {
   }
 }
 
+/*uint64
+copystruct(uint64 addr) {
+	uint64 st;
+ 	if(argaddr(0, &st) < 0)
+   	return -1;
+
+	struct proc *p = myproc();
+  struct sysinfo si;
+
+	if(copyout(p->pagetable, addr, (char *)&si, sizeof(si)) < 0)
+		return -1;
+	return 0;
+}*/
+
+/*
+sys_sysinfo(void)
+{
+  uint64 st;
+
+  if(argaddr(0, &st) < 0) {
+    return -1;
+  }
+
+  struct proc *p = myproc();
+  struct sysinfo si;
+
+  //sem ten kalloc a to druhe
+
+  if(copyout(p->pagetable, st, (char *)&si, sizeof(si)) < 0) {
+    return -1;
+  }
+  return 0;
+
+}
+*/
+
 int
 main(int argc, char *argv[])
 {
