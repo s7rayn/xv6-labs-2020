@@ -201,6 +201,7 @@ def assert_lines_match(text, *regexps, **kw):
 #
 
 __all__ += ["make", "maybe_unlink", "reset_fs", "color", "random_str", "check_time", "check_answers"]
+__all__ += ["make", "maybe_unlink", "reset_fs", "color", "random_str", "check_time"]
 
 MAKE_TIMESTAMP = 0
 

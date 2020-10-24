@@ -35,7 +35,11 @@ OBJS = \
   $K/sysfile.o \
   $K/kernelvec.o \
   $K/plic.o \
-  $K/virtio_disk.o
+  $K/virtio_disk.o \
+
+ifeq ($(LAB),pgtbl)
+OBJS += $K/vmcopyin.o
+endif
 
 ifeq ($(LAB),pgtbl)
 OBJS += \
@@ -92,6 +96,9 @@ XCFLAGS += -DSOL_$(LABUPPER) -DLAB_$(LABUPPER)
 endif
 
 CFLAGS += $(XCFLAGS)
+CFLAGS += -DSOL_$(LABUPPER)
+endif
+
 CFLAGS += -MD
 CFLAGS += -mcmodel=medany
 CFLAGS += -ffreestanding -fno-common -nostdlib -mno-relax
@@ -175,6 +182,15 @@ UPROGS=\
 	$U/_grind\
 	$U/_wc\
 	$U/_zombie\
+	$U/_trace\
+	$U/_sysinfotest\
+
+
+	$U/_sleep\
+	$U/_pingpong\
+	$U/_primes\
+	$U/_find\
+	$U/_xargs\
 
 
 
@@ -188,6 +204,16 @@ ifeq ($(LAB),traps)
 UPROGS += \
 	$U/_call\
 	$U/_bttest
+ifeq ($(LAB),syscall)
+UPROGS += \
+	$U/_trace\
+	$U/_sysinfotest
+endif
+
+ifeq ($(LAB),trap)
+UPROGS += \
+	$U/_call\
+	$U/_alarmtest
 endif
 
 ifeq ($(LAB),lazy)
@@ -234,6 +260,12 @@ ifeq ($(LAB),net)
 UPROGS += \
 	$U/_nettests
 endif
+
+UEXTRA=
+ifeq ($(LAB),util)
+	UEXTRA += user/xargstest.sh
+endif
+
 
 UEXTRA=
 ifeq ($(LAB),util)
