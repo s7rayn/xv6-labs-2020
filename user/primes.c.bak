@@ -1,0 +1,77 @@
+#include "kernel/types.h"
+#include "kernel/stat.h"
+#include "user/user.h"
+
+	/*
+	ak proces nema dieta, vytvorit proces
+	na zaciatku zatvorit zapisovaci deskriptor prveho procesu
+	do pravej rury - detskej vzdy zapisujem, cize zatvorim read deskriptor
+	ak pride nedelitelne cislo, vytvori pole dvoch int
+	proces: dostanem cislo-to je automaticky prvocislo
+		cyklus: ak read precita nenulovu hodnotu (pokym prijima data) - opak cyklu zatvori wr d
+		dostanem nejake cislo, kontrolujem delitelnost prvocislom - riadok proces
+		ak nie je delitelne, poslem ho pravemu susedovi-dietatu - tie deti
+			musim vytvarat priebezne, tam si ulozim daku premennu do ktorej napisem
+			ci to dieta existuje - ak este neexistuje - vytvorim (fork, pipe, zatvorenie desc
+			v rodicovi) a v dietati pustim zas funkciu ktora bude robit presne to iste
+		po skonceni cyklu v prvom procese zatvorim ruru a zvysne procesy sa vypnu
+	*/
+
+/*int funkcia(int* pipe) {
+	// 
+}*/
+
+void child(int read_fd) { // obsahuje citaci deskriptor ako parameter
+  int p, n;
+  int write_fd[2];
+  int no_child = 1;
+  pipe(write_fd);
+
+  read(read_fd, &p, sizeof(int)); // nacitaj parenta do rury
+  printf("prime %d\n", p);
+  while (read(read_fd, &n, sizeof(int)) == sizeof(int)) { // ak ide o dalsie cislo za p
+    if ((n % p) != 0) {
+      if (no_child) { // ak nema dieta
+        no_child = 0;
+        int pid = fork(); // spravi dieta
+        if (pid == 0) { // a to novo spravene dieta spravi nasledovne:
+            close(write_fd[1]); // zavri zapisovaci deksriptor
+            child(write_fd[0]); // znova vytvor dieta a rob toto dookola
+            break;
+        } else if (pid < 0) {
+            // Fork err
+            fprintf(2, "error: fork failed");
+        }
+      }
+      // ak uz ma dieta,
+      write(write_fd[1], &n, sizeof(int)); // do zapisovacieho deskriptoru rury zapis n
+    }
+  }
+  close(write_fd[1]); // zavri zapisovaci koniec rury
+  wait(0);
+}
+
+int main() {
+  int fds[2];
+  close(0); // zatvorim standard input
+
+  pipe(fds);
+
+  int pid = fork();
+
+  if (pid == 0) { // I am child
+    // Close unneeded descriptors
+    close(fds[1]); // dieta nebude do pipe zapisovat, zavri zapisovaci deskriptor
+    child(fds[0]); // vytvor dieta
+  } else if (pid > 0) { // I am parent
+    for (int i = 2; i <= 35; i++) {
+        write(fds[1], &i, sizeof(int)); // zapis kazde cislo do prvej rury
+    }
+    close(fds[1]); // zavri zapisovaci deskriptor
+    wait(0);
+  } else {
+    // Fork err
+    fprintf(2, "error: fork\n");
+  }
+  exit(0);
+}

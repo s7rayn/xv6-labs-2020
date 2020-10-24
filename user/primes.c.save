@@ -1,0 +1,26 @@
+#include "kernel/types.h"
+#include "kernel/stat.h"
+#include "user/user.h"
+
+int main(int agrc, char *argv[]) {
+	int parent[2], child[2], pid;
+	pipe(parent);
+	pipe(child);
+
+	pid = fork();
+
+	if(pid == 0) {
+		//child
+		 p;
+		int x = read(parent[0], &p, 1);
+		printf("child: %d, x: %d\n", atoi(&p), x);
+	} else {
+		for(int i = 2; i < 35; i++) {
+			int x = write(parent[1], i, 1);
+			wait(0);
+			printf("parent: %d, x: %d\n", getpid(), x);
+		}
+	}
+
+	exit(0);
+}

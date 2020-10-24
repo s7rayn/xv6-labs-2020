@@ -47,6 +47,62 @@ kvminit()
   kvmmap(TRAMPOLINE, (uint64)trampoline, PGSIZE, PTE_R | PTE_X);
 }
 
+/*
+ * create kernel page table for a process.
+ */
+pagetable_t
+new_kernel_pagetable(void)
+{
+  pagetable_t pagetable = (pagetable_t) kalloc();
+	if(pagetable == 0)
+		return 0;
+
+  memset(pagetable, 0, PGSIZE);
+
+  // uart registers
+ 	mappages(pagetable, UART0, PGSIZE, UART0, PTE_R | PTE_W);
+
+  // virtio mmio disk interface
+  mappages(pagetable, VIRTIO0, PGSIZE, VIRTIO0, PTE_R | PTE_W);
+
+  // CLINT
+  mappages(pagetable, CLINT, 0x10000, CLINT, PTE_R | PTE_W);
+
+  // PLIC
+  mappages(pagetable, PLIC, 0x400000, PLIC, PTE_R | PTE_W);
+
+  // map kernel text executable and read-only.
+  mappages(pagetable, KERNBASE, (uint64)etext-KERNBASE, KERNBASE, PTE_R | PTE_X);
+
+  // map kernel data and the physical RAM we'll make use of.
+ 	mappages(pagetable, (uint64)etext, PHYSTOP-(uint64)etext, (uint64)etext, PTE_R | PTE_W);
+
+  // map the trampoline for trap entry/exit to
+  // the highest virtual address in the kernel.
+  mappages(pagetable, TRAMPOLINE, PGSIZE, (uint64)trampoline, PTE_R | PTE_X);
+
+	// TODO Check for errors!
+
+	return pagetable;
+}
+
+void freewalk(pagetable_t pagetable);
+
+void
+kernel_freepagetable(pagetable_t pagetable, uint64 sz, uint64 va_kstack)
+{
+ 	uvmunmap(pagetable, UART0, PGSIZE/PGSIZE, 0);
+  uvmunmap(pagetable, VIRTIO0, PGSIZE/PGSIZE, 0);
+  uvmunmap(pagetable, CLINT, 0x10000/PGSIZE, 0);
+  uvmunmap(pagetable, PLIC, 0x400000/PGSIZE, 0); 
+  uvmunmap(pagetable, KERNBASE, PGROUNDUP((uint64)etext-KERNBASE)/PGSIZE, 0);
+ 	uvmunmap(pagetable, (uint64)etext, PGROUNDUP(PHYSTOP-(uint64)etext)/PGSIZE, 0);
+  uvmunmap(pagetable, TRAMPOLINE, PGSIZE/PGSIZE, 0);
+	uvmunmap(pagetable, va_kstack, PGSIZE/PGSIZE, 0);
+	freewalk(pagetable);
+}
+
+
 // Switch h/w page table register to the kernel's page table,
 // and enable paging.
 void
@@ -439,4 +495,34 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
   } else {
     return -1;
   }
+}
+
+void
+vmprint_(pagetable_t pagetable, int level)
+{
+  for(int i = 0; i < 512; i++){
+    pte_t pte = pagetable[i];
+		if(pte & PTE_V) {
+			uint64 child = PTE2PA(pte);
+			for(int j = 0; j < level; j++) {
+				if(j<level-1) {
+				printf(".. ");
+				} else {
+					printf("..");
+				}
+			}
+			printf("%d: pte %p pa %p\n", i, pte, child); 
+
+    	if((pte & (PTE_R|PTE_W|PTE_X)) == 0) {
+      	vmprint_((pagetable_t)child, level+1);
+			}
+    }
+  }
+}
+
+void
+vmprint(pagetable_t pagetable)
+{
+	printf("page table %p\n", pagetable);
+	vmprint_(pagetable, 1);
 }
