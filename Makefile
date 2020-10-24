@@ -153,6 +153,19 @@ UPROGS=\
 	$U/_sysinfotest\
 
 
+	$U/_sleep\
+	$U/_pingpong\
+	$U/_primes\
+	$U/_find\
+	$U/_xargs\
+
+
+ifeq ($(LAB),syscall)
+UPROGS += \
+	$U/_trace\
+	$U/_sysinfotest
+endif
+
 ifeq ($(LAB),trap)
 UPROGS += \
 	$U/_call\
@@ -168,6 +181,12 @@ ifeq ($(LAB),cow)
 UPROGS += \
 	$U/_cowtest
 endif
+
+UEXTRA=
+ifeq ($(LAB),util)
+	UEXTRA += user/xargstest.sh
+endif
+
 
 UEXTRA=
 ifeq ($(LAB),util)
