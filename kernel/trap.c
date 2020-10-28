@@ -69,6 +69,12 @@ usertrap(void)
 	} else if(r_scause() == 13 || r_scause() == 15) {
 			uint64 va = r_stval(); // adresa, ktora sposobila vypadok; na nu musime alokovat
 
+			if(PGROUNDUP(va) > p->sz) {
+				printf("usertrap(): va %p too large\n", va);
+				p->killed = 1;
+  	    goto failed;
+	    }
+
 			char *mem = kalloc();
 			if(mem == 0) {
 				printf("usertrap(): page fault %p\n", va);
@@ -78,10 +84,6 @@ usertrap(void)
 
 			mappages(p->pagetable, PGROUNDDOWN(va), PGSIZE, (uint64)mem, PTE_U|PTE_W|PTE_R);
 
-			/*if(PGROUNDDOWN(stval) + PGSIZE == PGROUNDDOWN(p->trapframe->sp)) {
-				p->killed = 1;
-  	    goto failed;
-	    }*/
   } else if((which_dev = devintr()) != 0){
     // ok
   } else {
