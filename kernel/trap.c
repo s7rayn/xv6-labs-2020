@@ -65,38 +65,31 @@ usertrap(void)
     intr_on();
 
     syscall();
+
+	} else if(r_scause() == 13 || r_scause() == 15) {
+			uint64 va = r_stval(); // adresa, ktora sposobila vypadok; na nu musime alokovat
+
+			char *mem = kalloc();
+			if(mem == 0) {
+				printf("usertrap(): page fault %p\n", va);
+				p->killed = 1;
+				goto failed;
+			}
+
+			mappages(p->pagetable, PGROUNDDOWN(va), PGSIZE, (uint64)mem, PTE_U|PTE_W|PTE_R);
+
+			/*if(PGROUNDDOWN(stval) + PGSIZE == PGROUNDDOWN(p->trapframe->sp)) {
+				p->killed = 1;
+  	    goto failed;
+	    }*/
   } else if((which_dev = devintr()) != 0){
     // ok
   } else {
     printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
     printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());
 		p->killed = 1;
+	}
 
-	 	if(r_scause() == 13 || r_scause() == 15) {
-			uint64 stval = r_stval(); // adresa, ktora sposobila vypadok; na nu musime alokovat
-			stval = PGROUNDDOWN(stval);
-
-			char *mem;
-			uint64 a;
-
-	  	for(a = stval; a < p->sz; a += PGSIZE){
-  	  	mem = kalloc();
-		    if(mem == 0){
-  		    uvmdealloc(p->pagetable, a, stval);
-					goto failed;
-		    }
-	  	  memset(mem, 0, PGSIZE);
-		    if(mappages(p->pagetable, a, PGSIZE, (uint64)mem, PTE_W|PTE_X|PTE_R|PTE_U) != 0){
-		      kfree(mem);
-		      uvmdealloc(p->pagetable, a, stval);
-					goto failed;
-		    }
-		  }
-			p->killed = 0;
-			vmprint(p->pagetable);
-		}
-
-  }
 	failed:
 
   if(p->killed)
