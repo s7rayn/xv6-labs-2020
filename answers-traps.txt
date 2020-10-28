@@ -1,4 +1,6 @@
-a1, a2
-1e, 10
-610080e7
-0x0:
+argumenty obsahuju registre a0 az a5; hodnota 13 je v a2
+li a1,12 - volanie funkcie nie je - je to jedna z funkcionalit kompilatorov; kompilator vie urcit hodnotu vopred
+0x628 (tam kde je # xxx <printf>)
+
+57616 v hex je E110, prvy bajt je 72 = r, druhy 6c = l, treti 64 = d a stvrty 00; little indian - hodnoty sa do pamate zapisuju od "maleho" konca (vpravo); ked to teda precitame ako retazec, ten citame od mensich adries k vyssim; ak by bol big endian, i by muselo byt 0x726c6400
+to dalsie cislo sa nacita podla volacich konvencii, ak je volacia konvencia ze argumenty sa nacitavaju na stack, nacita sa dalsie cislo na stacku za tym; v risc-v volacia konvencia funguje tak, ze registre a0-a5 su pouzivane na argumenty, takze by mala byt vypisana hodnota registra a2 (a1 = 3)
