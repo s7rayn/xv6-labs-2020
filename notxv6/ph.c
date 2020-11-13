@@ -43,8 +43,8 @@ void put(int key, int value)
   int i = key % NBUCKET;
 
   // is the key already present?
-	pthread_mutex_lock(&lock[i]);
   struct entry *e = 0;
+	pthread_mutex_lock(&lock[i]);
   for (e = table[i]; e != 0; e = e->next) {
     if (e->key == key)
       break;
@@ -65,12 +65,12 @@ get(int key)
   int i = key % NBUCKET;
 
 
-	pthread_mutex_lock(&lock[i]);
+	//pthread_mutex_lock(&lock[i]);
   struct entry *e = 0;
   for (e = table[i]; e != 0; e = e->next) {
     if (e->key == key) break;
   }
-	pthread_mutex_unlock(&lock[i]);
+	//pthread_mutex_unlock(&lock[i]);
 
   return e;
 }
