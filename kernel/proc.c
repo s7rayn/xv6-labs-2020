@@ -131,6 +131,7 @@ found:
   // Set up new context to start executing at forkret,
   // which returns to user space.
   memset(&p->context, 0, sizeof(p->context));
+  memset(&p->mmaps, 0, sizeof(struct vma) * 16);
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
 
@@ -145,6 +146,11 @@ freeproc(struct proc *p)
 {
   if(p->trapframe)
     kfree((void*)p->trapframe);
+	/*for(int i = 0; i < 16; i++) {
+		if(p->mmaps[i].used) {
+			uvmunmap(p->pagetable, p->mmaps[i].addr, p->mmaps[i].length / PGSIZE, 1);
+		}
+	}*/
   p->trapframe = 0;
   if(p->pagetable)
     proc_freepagetable(p->pagetable, p->sz);
@@ -275,7 +281,7 @@ fork(void)
   }
 
   // Copy user memory from parent to child.
-  if(uvmcopy(p->pagetable, np->pagetable, p->sz) < 0){
+  if(uvmcopy(p->pagetable, np->pagetable, 0, p->sz) < 0){
     freeproc(np);
     release(&np->lock);
     return -1;
@@ -302,6 +308,15 @@ fork(void)
 
   np->state = RUNNABLE;
 
+	memmove(&np->mmaps, &p->mmaps, sizeof(struct vma) * 16);
+	for(int i = 0; i < 16; i++) {
+		if(p->mmaps[i].length) {
+			if(uvmcopy(p->pagetable, np->pagetable, p->mmaps[i].addr, p->mmaps[i].length) < 0) {
+				panic("fork mmap uvmcopy");
+			}
+			filedup(p->mmaps[i].f);
+		}
+	}
   release(&np->lock);
 
   return pid;
@@ -352,6 +367,12 @@ exit(int status)
       p->ofile[fd] = 0;
     }
   }
+
+	for(int i = 0; i < 16; i++) {
+		if(p->mmaps[i].length) {
+			kmunmap(p->mmaps[i].addr, p->mmaps[i].length);
+		}
+	}
 
   begin_op();
   iput(p->cwd);

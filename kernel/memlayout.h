@@ -65,3 +65,4 @@
 //   TRAPFRAME (p->trapframe, used by the trampoline)
 //   TRAMPOLINE (the same page as in the kernel)
 #define TRAPFRAME (TRAMPOLINE - PGSIZE)
+#define MMAP_START (TRAPFRAME - (1L << (9 + 9 + 9 + 12 - 2)))
