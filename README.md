@@ -11,5 +11,4 @@ https://uim.fei.stuba.sk/predmet/b-os/
 - [x] [Lab thread: Multithreading (vlákna)](https://github.com/s7rayn/xv6-labs-2020/tree/thread)
 - [x] [Lab lock: Parallelism/locking (zámky)](https://github.com/s7rayn/xv6-labs-2020/tree/lock)
 - [x] [Lab fs: File system (súborový systém)](https://github.com/s7rayn/xv6-labs-2020/tree/fs)
-- [ ] [Lab mmap: Mmap](https://github.com/s7rayn/xv6-labs-2020/tree/mmap)
-- [ ] [Lab net: Network stack](https://github.com/s7rayn/xv6-labs-2020/tree/net)
+- [x] [Lab mmap: Mmap](https://github.com/s7rayn/xv6-labs-2020/tree/mmap)
